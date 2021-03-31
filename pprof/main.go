@@ -37,11 +37,11 @@ func main() {
 	}()
 
 	// test XSS
-	/*for {
+	for {
 		for _, tv := range xssToken {
-			GSQLI.XSSParser(tv)
+			gsqli.XSSParser(tv)
 		}
-	}*/
+	}
 
 	for {
 		gsqli.SQLInject("asdf asd ; -1' and 1=1 union/* foo */select load_file('/etc/passwd')--")

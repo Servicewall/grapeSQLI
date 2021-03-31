@@ -117,6 +117,14 @@ func SQLInject(src string) error {
 	return nil
 }
 
+func SQLTest(src string) (bool,  string) {
+	state := sqli_state{}
+	libinjection_sqli_init(&state, src, len(src), 0)
+	issqli := libinjection_is_sqli(&state)
+
+	return issqli, string(state.fingerprint)
+}
+
 func libinjection_sqli_tokenize(sf *sqli_state) bool {
 	current := sf.current
 	s := sf.s

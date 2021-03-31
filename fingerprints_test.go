@@ -5,7 +5,7 @@ import (
 )
 
 func Test_SearchFile(t *testing.T) {
-	err := LoadData(".\\sqlparse_data.json")
+	err := LoadData("./sqlparse_data.json")
 	if err != nil {
 		t.Error(err)
 		return
