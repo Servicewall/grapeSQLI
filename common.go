@@ -1,6 +1,8 @@
 package gsqli
 
 import (
+	"log"
+	"runtime/debug"
 	"strings"
 )
 
@@ -16,6 +18,11 @@ func h5_is_white(ch uint8) bool {
 }
 
 func memchr(src string, pos int, char byte) int {
+	if len(src) < pos {
+		log.Println("XSS detect slice bounds out of range: ", src, pos, char)
+		debug.PrintStack()
+		return -1
+	}
 	ipos := strings.IndexByte(src[pos:], char)
 	if ipos == -1 {
 		return -1
