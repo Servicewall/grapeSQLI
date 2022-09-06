@@ -435,7 +435,7 @@ func libinjection_is_xss(s string, flags int) int {
 			attr = TYPE_NONE
 		} else if h5.token_type == TAG_COMMENT {
 			/* IE uses a "`" as a tag ending char */
-			if memchr(h5.s[h5.token_start:], h5.token_start, '`') != 0 {
+			if memchr(h5.s[h5.token_start:], 0, '`') >= 0 {
 				return 1
 			}
 
