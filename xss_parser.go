@@ -211,6 +211,36 @@ var BLACKTAG = []string{
 	"XSS",
 }
 
+/*
+ on event
+*/
+
+var ONEVENT = map[string]struct{}{
+	"onerror":     {},
+	"onclick":     {},
+	"onabort":     {},
+	"onblur":      {},
+	"onchange":    {},
+	"ondblclick":  {},
+	"ondragdrop":  {},
+	"onfocus":     {},
+	"onkeydown":   {},
+	"onkeypress":  {},
+	"onkeyup":     {},
+	"onload":      {},
+	"onmousedown": {},
+	"onmousemove": {},
+	"onmouseout":  {},
+	"onmouseover": {},
+	"onmouseup":   {},
+	"onmove":      {},
+	"onreset":     {},
+	"onresize":    {},
+	"onselect":    {},
+	"onsubmit":    {},
+	"onunload":    {},
+}
+
 func cstrcasecmp_with_null(a, b string, cmplen int) int {
 	if strings.EqualFold(b[:cmplen], a) {
 		return 0
@@ -321,8 +351,7 @@ func is_black_attr(s string, len int) int {
 
 	if len >= 5 {
 		/* JavaScript on.* */
-		if (s[0] == 'o' || s[0] == 'O') && (s[1] == 'n' || s[1] == 'N') {
-			/* printf("Got JavaScript on- attribute name\n"); */
+		if _, ok := ONEVENT[strings.ToLower(s[:len])]; ok {
 			return TYPE_BLACK
 		}
 
