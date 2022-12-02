@@ -50,6 +50,10 @@ type sqli_state struct {
 	 */
 	fingerprint []byte
 
+	// record finger print start/end position in s
+	fingerprintStart int
+	fingerprintEnd   int
+
 	/*
 	 * Line number of code that said decided if the input was SQLi or
 	 * not.  Most of the time it's line that said "it's not a matching
@@ -117,12 +121,17 @@ func SQLInject(src string) error {
 	return nil
 }
 
-func SQLTest(src string) (bool,  string) {
+func SQLTest(src string) (bool, string) {
+	var envidence string
 	state := sqli_state{}
 	libinjection_sqli_init(&state, src, len(src), 0)
 	issqli := libinjection_is_sqli(&state)
 
-	return issqli, string(state.fingerprint)
+	if issqli {
+		envidence = src[state.fingerprintStart : state.fingerprintEnd+1]
+	}
+
+	return issqli, envidence
 }
 
 func libinjection_sqli_tokenize(sf *sqli_state) bool {
@@ -188,6 +197,7 @@ func libinjection_sqli_init(sf *sqli_state, s string, len, flags int) {
 	sf.fingerprint = []byte{}
 	sf.s = s
 	sf.slen = len
+	sf.fingerprintStart = len
 	sf.lookup = libinjection_sqli_lookup_word
 	sf.userdata = 0
 	sf.flags = flags
@@ -819,6 +829,12 @@ func libinjection_sqli_fingerprint(sql_state *sqli_state, flags int) string {
 
 	for i := 0; i < tlen; i++ {
 		sql_state.fingerprint = append(sql_state.fingerprint, sql_state.tokenvec[i].ttype)
+		if sql_state.tokenvec[i].pos < sql_state.fingerprintStart {
+			sql_state.fingerprintStart = sql_state.tokenvec[i].pos
+		}
+		if sql_state.tokenvec[i].pos > sql_state.fingerprintEnd {
+			sql_state.fingerprintEnd = sql_state.tokenvec[i].pos
+		}
 	}
 
 	/*
