@@ -404,7 +404,7 @@ func is_black_url(s string) bool {
 	return false
 }
 
-func libinjection_is_xss(s string, flags int) int {
+func libinjection_is_xss(s string, flags int) (int, h5_state_t) {
 	var h5 h5_state_t
 	attr := TYPE_NONE
 
@@ -415,10 +415,10 @@ func libinjection_is_xss(s string, flags int) int {
 		}
 
 		if h5.token_type == DOCTYPE {
-			return 1
+			return 1, h5
 		} else if h5.token_type == TAG_NAME_OPEN {
 			if is_black_tag(h5.s[h5.token_start:], h5.token_len) {
-				return 1
+				return 1, h5
 			}
 		} else if h5.token_type == ATTR_NAME {
 			attr = is_black_attr(h5.s[h5.token_start:], h5.token_len)
@@ -442,18 +442,18 @@ func libinjection_is_xss(s string, flags int) int {
 			case TYPE_NONE:
 				break
 			case TYPE_BLACK:
-				return 1
+				return 1, h5
 			case TYPE_ATTR_URL:
 				if is_black_url(h5.s[h5.token_start : h5.token_start+h5.token_len]) {
-					return 1
+					return 1, h5
 				}
 				break
 			case TYPE_STYLE:
-				return 1
+				return 1, h5
 			case TYPE_ATTR_INDIRECT:
 				/* an attribute name is specified in a _value_ */
 				if is_black_attr(h5.s[h5.token_start:], h5.token_len) > 0 {
-					return 1
+					return 1, h5
 				}
 				break
 				/*
@@ -465,7 +465,7 @@ func libinjection_is_xss(s string, flags int) int {
 		} else if h5.token_type == TAG_COMMENT {
 			/* IE uses a "`" as a tag ending char */
 			if memchr(h5.s[h5.token_start:], 0, '`') >= 0 {
-				return 1
+				return 1, h5
 			}
 
 			/* IE conditional comment */
@@ -473,47 +473,47 @@ func libinjection_is_xss(s string, flags int) int {
 				if h5.s[h5.token_start] == '[' &&
 					(h5.s[h5.token_start+1] == 'i' || h5.s[h5.token_start+1] == 'I') &&
 					(h5.s[h5.token_start+2] == 'f' || h5.s[h5.token_start+2] == 'F') {
-					return 1
+					return 1, h5
 				}
 				if (h5.s[h5.token_start] == 'x' || h5.s[h5.token_start] == 'X') &&
 					(h5.s[h5.token_start+1] == 'm' || h5.s[h5.token_start+1] == 'M') &&
 					(h5.s[h5.token_start+2] == 'l' || h5.s[h5.token_start+2] == 'L') {
-					return 1
+					return 1, h5
 				}
 			}
 
 			if h5.token_len > 5 {
 				/*  IE <?import pseudo-tag */
 				if cstrcasecmp_with_null("IMPORT", h5.s[h5.token_start:], h5.token_len) == 0 {
-					return 1
+					return 1, h5
 				}
 
 				/*  XML Entity definition */
 				if cstrcasecmp_with_null("ENTITY", h5.s[h5.token_start:], h5.token_len) == 0 {
-					return 1
+					return 1, h5
 				}
 			}
 		}
 	}
-	return 0
+	return 0, h5
 }
 
-func XSSParser(s string) bool {
-	if libinjection_is_xss(s, DATA_STATE) == 1 {
-		return true
+func XSSParser(s string) (bool, string) {
+	if inject, h5 := libinjection_is_xss(s, DATA_STATE); inject == 1 {
+		return true, s[h5.token_start : h5.token_start+h5.token_len]
 	}
-	if libinjection_is_xss(s, VALUE_NO_QUOTE) == 1 {
-		return true
+	if inject, h5 := libinjection_is_xss(s, VALUE_NO_QUOTE); inject == 1 {
+		return true, s[h5.token_start : h5.token_start+h5.token_len]
 	}
-	if libinjection_is_xss(s, VALUE_SINGLE_QUOTE) == 1 {
-		return true
+	if inject, h5 := libinjection_is_xss(s, VALUE_SINGLE_QUOTE); inject == 1 {
+		return true, s[h5.token_start : h5.token_start+h5.token_len]
 	}
-	if libinjection_is_xss(s, VALUE_DOUBLE_QUOTE) == 1 {
-		return true
+	if inject, h5 := libinjection_is_xss(s, VALUE_DOUBLE_QUOTE); inject == 1 {
+		return true, s[h5.token_start : h5.token_start+h5.token_len]
 	}
-	if libinjection_is_xss(s, VALUE_BACK_QUOTE) == 1 {
-		return true
+	if inject, h5 := libinjection_is_xss(s, VALUE_BACK_QUOTE); inject == 1 {
+		return true, s[h5.token_start : h5.token_start+h5.token_len]
 	}
 
-	return false
+	return false, ""
 }
