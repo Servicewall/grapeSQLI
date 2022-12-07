@@ -128,7 +128,7 @@ func SQLTest(src string) (bool, string) {
 	issqli := libinjection_is_sqli(&state)
 
 	if issqli {
-		envidence = src[state.fingerprintStart : state.fingerprintEnd+1]
+		envidence = src[state.fingerprintStart:state.fingerprintEnd]
 	}
 
 	return issqli, envidence
@@ -829,11 +829,12 @@ func libinjection_sqli_fingerprint(sql_state *sqli_state, flags int) string {
 
 	for i := 0; i < tlen; i++ {
 		sql_state.fingerprint = append(sql_state.fingerprint, sql_state.tokenvec[i].ttype)
-		if sql_state.tokenvec[i].pos < sql_state.fingerprintStart {
+		if sql_state.tokenvec[i].pos < sql_state.fingerprintStart &&
+			(i != 0 || sql_state.tokenvec[i].ttype != 's') {
 			sql_state.fingerprintStart = sql_state.tokenvec[i].pos
 		}
 		if sql_state.tokenvec[i].pos > sql_state.fingerprintEnd {
-			sql_state.fingerprintEnd = sql_state.tokenvec[i].pos
+			sql_state.fingerprintEnd = sql_state.tokenvec[i].pos + sql_state.tokenvec[i].len
 		}
 	}
 
