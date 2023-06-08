@@ -176,6 +176,10 @@ func st_assign(st *sqli_token, stype uint8, pos int, len int, value string) {
 	if last >= MSIZE {
 		last = MSIZE - 1
 	}
+	if last < 0 {
+		debug.PrintStack()
+		return
+	}
 
 	st.ttype = stype
 	st.pos = pos

@@ -1,5 +1,7 @@
 package gsqli
 
+import "fmt"
+
 const (
 	TYPE_TK_NONE        = 0
 	TYPE_KEYWORD        = 'k'
@@ -1008,6 +1010,9 @@ func parse_money(sf *sqli_state) int {
 				sf.current.str_close = CHAR_NULL
 				return slen
 			} else {
+				if strend-(pos+2) < 0 {
+					fmt.Println(*sf)
+				}
 				st_assign(sf.current, TYPE_STRING, pos+2, strend-(pos+2), cs[pos+2:])
 				sf.current.str_open = '$'
 				sf.current.str_close = '$'
